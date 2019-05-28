@@ -522,7 +522,7 @@ classdef KilosortMetrics < handle
                 
                 if showIndividual
                     h = plot(x, y, '.', 'Color', cmap(iC,:), 'MarkerSize', sz, 'UserData', ud);
-                   TrialDataUtilities.Plotting.setMarkerOpacity(h, alpha);
+                   %TrialDataUtilities.Plotting.setMarkerOpacity(h, alpha);
  
                    hold on;
                 end

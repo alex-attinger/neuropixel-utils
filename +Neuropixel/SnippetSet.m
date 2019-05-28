@@ -242,9 +242,16 @@ classdef SnippetSet < handle & matlab.mixin.Copyable
                 
                 for iC = 1:ss.channelMap.nChannels
                     if channels_plotted(iC)
+                        try
                         text(xc(iC), yc(iC), sprintf('ch %d', ss.channelMap.chanMap(iC)), ...
                             'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', ...
+                             p.Results.labelArgs{:});
+
+                        catch ME
+                        text(xc(iC), yc(iC), sprintf('ch %d', ss.channelMap.channelIdsMapped(iC)), ...
+                            'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', ...
                             p.Results.labelArgs{:});
+                        end
                     end
                 end
             end

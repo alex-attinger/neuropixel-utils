@@ -124,7 +124,11 @@ classdef ImecDataset < handle
             meta = df.readAPMeta();
             df.nChannels = meta.nSavedChans;
             df.fsAP = meta.imSampRate;
+            try
             df.highPassFilterHz = meta.imHpFlt;
+            catch
+                df.highPassFilterHz = 300;
+            end
             df.creationTime = datenum(meta.fileCreateTime, 'yyyy-mm-ddTHH:MM:SS');
 
             if df.hasLF
@@ -675,7 +679,7 @@ classdef ImecDataset < handle
         end
 
         function fileAP = get.fileAP(df)
-            fileAP = [df.fileStem '.imec.' df.fileTypeAP '.bin'];
+            fileAP = [df.fileStem '.imec0.' df.fileTypeAP '.bin'];
         end
 
         function tf = get.hasAP(df)
@@ -683,7 +687,7 @@ classdef ImecDataset < handle
         end
 
         function fileAPMeta = get.fileAPMeta(df)
-            fileAPMeta = [df.fileStem '.imec.ap.meta'];
+            fileAPMeta = [df.fileStem '.imec0.ap.meta'];
         end
 
         function pathAPMeta = get.pathAPMeta(df)
@@ -695,11 +699,11 @@ classdef ImecDataset < handle
         end
 
         function fileAP = get.fileLF(df)
-            fileAP = [df.fileStem '.imec.lf.bin'];
+            fileAP = [df.fileStem '.imec0.lf.bin'];
         end
 
         function fileLFMeta = get.fileLFMeta(df)
-            fileLFMeta = [df.fileStem '.imec.lf.meta'];
+            fileLFMeta = [df.fileStem '.imec0.lf.meta'];
         end
 
         function pathLFMeta = get.pathLFMeta(df)
@@ -714,7 +718,7 @@ classdef ImecDataset < handle
             if df.syncInAPFile
                 fileSync = df.fileAP;
             else
-                fileSync = [df.fileStem, '.imec.sync.bin'];
+                fileSync = [df.fileStem, '.imec0.sync.bin'];
             end
         end
 
@@ -1121,8 +1125,8 @@ end
             end
 
             [pathRoot, fileStem, fileTypeAP] = Neuropixel.ImecDataset.parseImecFileName(file);
-            pathAP = fullfile(pathRoot, [fileStem '.imec.' fileTypeAP '.bin']);
-            pathAPMeta = fullfile(pathRoot, [fileStem '.imec.ap.meta']);
+            pathAP = fullfile(pathRoot, [fileStem '.imec0.' fileTypeAP '.bin']);
+            pathAPMeta = fullfile(pathRoot, [fileStem '.imec0.ap.meta']);
 
             tf = exist(pathAP, 'file') && exist(pathAPMeta, 'file');
             if exist(pathAP, 'file') && ~exist(pathAPMeta, 'file')
@@ -1155,12 +1159,12 @@ end
                         apFiles = Neuropixel.ImecDataset.listAPFilesInDir(path);
                         if ~isempty(apFiles)
                             if numel(apFiles) > 1
-                                [tf, idx] = ismember([leaf '.imec.ap.bin'], apFiles);
+                                [tf, idx] = ismember([leaf '.imec0.ap.bin'], apFiles);
                                 if tf
                                     file = apFiles{idx};
                                     return
                                 end
-                                [tf, idx] = ismember([leaf '.imec.ap_CAR.bin'], apFiles);
+                                [tf, idx] = ismember([leaf '.imec0.ap_CAR.bin'], apFiles);
                                 if tf
                                     file = apFiles{idx};
                                     return
@@ -1179,7 +1183,7 @@ end
                         lfFiles = Neuropixel.ImecDataset.listLFFilesInDir(path);
                         if ~isempty(lfFiles)
                             if numel(lfFiles) > 1
-                                [tf, idx] = ismember([leaf '.imec.lf.bin'], lfFiles);
+                                [tf, idx] = ismember([leaf '.imec0.lf.bin'], lfFiles);
                                 if tf
                                     file = lfFiles{idx};
                                     return
@@ -1202,7 +1206,7 @@ end
             else
                 % not a folder or a file, but possibly pointing to the
                 % stem of a file, e.g. '/path/data' pointing to
-                % '/path/data.ap.imec.bin'
+                % '/path/data.ap.imec0.bin'
                 [parent, leaf, ext] = fileparts(fileOrFileStem);
                 if ~exist(parent, 'dir')
                     error('Folder %s does not exist', parent);
@@ -1246,7 +1250,7 @@ end
             file = [f, e];
 
 
-            match = regexp(file, '(?<stem>\w+).imec.(?<type>\w+).bin', 'names', 'once');
+            match = regexp(file, '(?<stem>\w+).imec0.(?<type>\w+).bin', 'names', 'once');
             if ~isempty(match)
                 type = match.type;
                 fileStem = match.stem;
@@ -1258,12 +1262,12 @@ end
         end
 
         function apFiles = listAPFilesInDir(path)
-            info = cat(1, dir(fullfile(path, '*.imec.ap.bin')), dir(fullfile(path, '*.imec.ap_CAR.bin')));
+            info = cat(1, dir(fullfile(path, '*.imec0.ap.bin')), dir(fullfile(path, '*.imec0.ap_CAR.bin')));
             apFiles = {info.name}';
         end
 
         function lfFiles = listLFFilesInDir(path)
-            info = dir(fullfile(path, '*.imec.lf.bin'));
+            info = dir(fullfile(path, '*.imec0.lf.bin'));
             lfFiles = {info.name}';
         end
         
@@ -1367,8 +1371,8 @@ end
                 gains = cellfun(@(imec) imec.apGain, imecList);
                 [multipliers, gain] = determineCommonGain(gains);
 
-                outFile = fullfile(outPath, [leaf '.imec.ap.bin']);
-                metaOutFile = fullfile(outPath, [leaf '.imec.ap.meta']);
+                outFile = fullfile(outPath, [leaf '.imec0.ap.bin']);
+                metaOutFile = fullfile(outPath, [leaf '.imec0.ap.meta']);
 
                 % generate new meta file
                 meta = imecList{1}.generateModifiedAPMeta();
@@ -1383,7 +1387,7 @@ end
                     pieces{iM} = strjoin(gainVals, ' ');
                 end
                 meta.imroTbl = ['(' strjoin(pieces, ')('), ')'];
-                meta.fileName = [leaf '.imec.ap.bin'];
+                meta.fileName = [leaf '.imec0.ap.bin'];
                 
                 % indicate concatenation time points in meta file
                 if isConcatenation
@@ -1426,8 +1430,8 @@ end
                 gains = cellfun(@(imec) imec.lfGain, imecList);
                 [multipliers, gain] = determineCommonGain(gains);
 
-                outFile = fullfile(outPath, [leaf '.imec.lf.bin']);
-                metaOutFile = fullfile(outPath, [leaf '.imec.lf.meta']);
+                outFile = fullfile(outPath, [leaf '.imec0.lf.bin']);
+                metaOutFile = fullfile(outPath, [leaf '.imec0.lf.meta']);
 
                 % generate new meta file
                 meta = imecList{1}.readLFMeta();
@@ -1441,7 +1445,7 @@ end
                     pieces{iM} = strjoin(gainVals, ' ');
                 end
                 meta. imroTbl = ['(' strjoin(pieces, ')('), ')'];
-                meta.fileName = [leaf '.imec.lf.bin'];
+                meta.fileName = [leaf '.imec0.lf.bin'];
                 
                 % indicate concatenation time points in meta file
                 if isConcatenation
@@ -1474,12 +1478,12 @@ end
             end
 
             if p.Results.writeSyncSeparate
-                outFile = fullfile(outPath, [leaf '.imec.sync.bin']);
+                outFile = fullfile(outPath, [leaf '.imec0.sync.bin']);
                 fprintf('Writing separate sync bin file %s', lastFilePart(outFile));
                 writeCatFile(outFile, imecList{1}.syncChannelIndex, 'sync', ones(nFiles, 1, 'int16'), chunkSize, {}, timeShiftsAP, dryRun);
             end
 
-            outFile = fullfile(outPath, [leaf '.imec.ap.bin']);
+            outFile = fullfile(outPath, [leaf '.imec0.ap.bin']);
             imecOut = Neuropixel.ImecDataset(outFile, 'channelMap', imecList{1}.channelMapFile);
 
             function writeCatFile(outFile, chIndsByFile, mode, multipliers, chunkSize, procFnList, timeShifts, dryRun)
